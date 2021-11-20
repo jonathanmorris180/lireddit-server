@@ -19,7 +19,8 @@ let PostResolver = class PostResolver {
     posts({ em }) {
         return em.find(Post_1.Post, {});
     }
-    post(id, { em }) {
+    post(id, { em, req }) {
+        req.session.userId = 1234;
         return em.findOne(Post_1.Post, { id });
     }
     async createPost(title, { em }) {

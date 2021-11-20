@@ -10,7 +10,11 @@ export class PostResolver {
     }
 
     @Query(() => Post, { nullable: true })
-    post(@Arg("id", () => Int) id: number, @Ctx() { em }: MyContext): Promise<Post | null> {
+    post(
+        @Arg("id", () => Int) id: number, 
+        @Ctx() { em, req }: MyContext
+    ): Promise<Post | null> {
+        req.session.userId = 1234;
         return em.findOne(Post, { id });
     }
 
