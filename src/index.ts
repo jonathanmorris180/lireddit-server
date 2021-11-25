@@ -14,7 +14,6 @@ import connectRedis from "connect-redis";
 import { MyContext } from "./types";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 
-
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig);
     await orm.getMigrator().up();
@@ -23,7 +22,7 @@ const main = async () => {
     const corsOptions = {
         origin: "https://studio.apollographql.com",
         credentials: true
-    }
+    };
 
     const RedisStore = connectRedis(session);
     const redisClient = redis.createClient();
@@ -45,11 +44,11 @@ const main = async () => {
             saveUninitialized: false
         })
     );
-    
+
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
-            resolvers: [ HelloResolver, PostResolver, UserResolver ],
-            validate: false,
+            resolvers: [HelloResolver, PostResolver, UserResolver],
+            validate: false
         }),
         plugins: [
             ApolloServerPluginLandingPageGraphQLPlayground({
@@ -68,8 +67,7 @@ const main = async () => {
     app.listen(4000, () => {
         console.log("server started on localhost:4000");
     });
-    
-}
+};
 
 main().catch(err => {
     console.error(err);

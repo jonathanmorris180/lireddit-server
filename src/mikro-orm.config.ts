@@ -7,10 +7,10 @@ import { User } from "./entities/User";
 export default {
     dbName: "lireddit",
     debug: !__prod__,
-    entities: [ Post, User ],
+    entities: [Post, User],
     migrations: {
         path: path.join(__dirname, "./migrations"),
-        pattern: /^[\w-]+\d+\.[tj]s$/,
+        pattern: /^[\w-]+\d+\.[tj]s$/
     },
     type: "postgresql"
 } as Parameters<typeof MikroORM.init>[0];
