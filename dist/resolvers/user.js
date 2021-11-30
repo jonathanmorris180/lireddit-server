@@ -69,32 +69,41 @@ let UserResolver = class UserResolver {
     async register(options, { req, em }) {
         if (options.username.length <= 2) {
             return {
-                errors: [{
+                errors: [
+                    {
                         field: "username",
                         message: "length must be greater than 2"
-                    }]
+                    }
+                ]
             };
         }
         if (options.password.length <= 3) {
             return {
-                errors: [{
+                errors: [
+                    {
                         field: "password",
                         message: "password length must be greater than 3"
-                    }]
+                    }
+                ]
             };
         }
         const hashedPassword = await argon2_1.default.hash(options.password);
-        const user = em.create(User_1.User, { username: options.username, password: hashedPassword });
+        const user = em.create(User_1.User, {
+            username: options.username,
+            password: hashedPassword
+        });
         try {
             await em.persistAndFlush(user);
         }
         catch (error) {
             if (error.code === "23505") {
                 return {
-                    errors: [{
+                    errors: [
+                        {
                             field: "username",
                             message: "username has already been taken"
-                        }]
+                        }
+                    ]
                 };
             }
             console.log("error inserting user: ", error);
@@ -106,19 +115,23 @@ let UserResolver = class UserResolver {
         const user = await em.findOne(User_1.User, { username: options.username });
         if (!user) {
             return {
-                errors: [{
+                errors: [
+                    {
                         field: "username",
                         message: "that username doesn't exist"
-                    }]
+                    }
+                ]
             };
         }
         const valid = await argon2_1.default.verify(user.password, options.password);
         if (!valid) {
             return {
-                errors: [{
+                errors: [
+                    {
                         field: "password",
                         message: "incorrect password"
-                    }]
+                    }
+                ]
             };
         }
         req.session.userId = user.id;

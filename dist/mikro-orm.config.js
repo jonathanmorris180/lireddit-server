@@ -13,7 +13,7 @@ exports.default = {
     entities: [Post_1.Post, User_1.User],
     migrations: {
         path: path_1.default.join(__dirname, "./migrations"),
-        pattern: /^[\w-]+\d+\.[tj]s$/,
+        pattern: /^[\w-]+\d+\.[tj]s$/
     },
     type: "postgresql"
 };

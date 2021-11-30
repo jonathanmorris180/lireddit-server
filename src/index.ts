@@ -13,19 +13,22 @@ import session from "express-session";
 import connectRedis from "connect-redis";
 import { MyContext } from "./types";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
+import cors from "cors";
 
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig);
     await orm.getMigrator().up();
     const app = express();
 
-    const corsOptions = {
-        origin: "https://studio.apollographql.com",
-        credentials: true
-    };
-
     const RedisStore = connectRedis(session);
     const redisClient = redis.createClient();
+
+    app.use(
+        cors({
+            origin: "http://localhost:3000",
+            credentials: true
+        })
+    );
 
     // express-session needs to be before the apollo middleware because it will be used inside the apollo middleware
     app.use(
@@ -62,7 +65,10 @@ const main = async () => {
 
     await apolloServer.start();
 
-    apolloServer.applyMiddleware({ app, cors: corsOptions });
+    apolloServer.applyMiddleware({
+        app,
+        cors: false
+    });
 
     app.listen(4000, () => {
         console.log("server started on localhost:4000");
