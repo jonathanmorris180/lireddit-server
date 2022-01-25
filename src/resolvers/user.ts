@@ -120,7 +120,12 @@ export class UserResolver {
                 ]
             };
         }
+        console.log("user.password: " + JSON.stringify(user));
+        console.log("options.password: " + options.password);
+        
         const valid = await argon2.verify(user.password, options.password);
+        console.log("valid: " + valid);
+        
         if (!valid) {
             return {
                 errors: [

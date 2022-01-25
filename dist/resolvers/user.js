@@ -123,7 +123,10 @@ let UserResolver = class UserResolver {
                 ]
             };
         }
+        console.log("user.password: " + JSON.stringify(user));
+        console.log("options.password: " + options.password);
         const valid = await argon2_1.default.verify(user.password, options.password);
+        console.log("valid: " + valid);
         if (!valid) {
             return {
                 errors: [
