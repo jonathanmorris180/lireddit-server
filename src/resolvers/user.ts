@@ -11,6 +11,7 @@ import {
     Resolver
 } from "type-graphql";
 import argon2 from "argon2";
+import { COOKIE_NAME } from "../constants";
 
 @InputType()
 class UsernamePasswordInput {
@@ -122,10 +123,10 @@ export class UserResolver {
         }
         console.log("user.password: " + JSON.stringify(user));
         console.log("options.password: " + options.password);
-        
+
         const valid = await argon2.verify(user.password, options.password);
         console.log("valid: " + valid);
-        
+
         if (!valid) {
             return {
                 errors: [
@@ -141,5 +142,21 @@ export class UserResolver {
         console.log("session: " + JSON.stringify(req.session));
 
         return { user };
+    }
+
+    @Mutation(() => Boolean)
+    logout(@Ctx() { req, res }: MyContext) {
+        return new Promise(resolve =>
+            req.session.destroy(err => {
+                res.clearCookie(COOKIE_NAME);
+                if (err) {
+                    console.log(err);
+                    resolve(false);
+                    return;
+                }
+
+                resolve(true);
+            })
+        );
     }
 }

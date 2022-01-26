@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
-import { __prod__ } from "./constants";
+import { COOKIE_NAME, __prod__ } from "./constants";
 import mikroConfig from "./mikro-orm.config";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
@@ -33,7 +33,7 @@ const main = async () => {
     // express-session needs to be before the apollo middleware because it will be used inside the apollo middleware
     app.use(
         session({
-            name: "qid",
+            name: COOKIE_NAME,
             store: new RedisStore({ client: redisClient, disableTouch: true }),
             // secret should be set as an environment variable - the secret is needed to decrypt the cookie on the server to send to Redis
             secret: "test",
