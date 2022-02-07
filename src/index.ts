@@ -14,8 +14,10 @@ import connectRedis from "connect-redis";
 import { MyContext } from "./types";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 import cors from "cors";
+import { sendEmail } from "./utils/sendEmail";
 
 const main = async () => {
+    sendEmail();
     const orm = await MikroORM.init(mikroConfig);
     await orm.getMigrator().up();
     const app = express();
