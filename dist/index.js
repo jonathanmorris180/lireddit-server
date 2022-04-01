@@ -19,6 +19,7 @@ const cors_1 = __importDefault(require("cors"));
 const typeorm_1 = require("typeorm");
 const User_1 = require("./entities/User");
 const Post_1 = require("./entities/Post");
+const path_1 = __importDefault(require("path"));
 const main = async () => {
     const conn = await (0, typeorm_1.createConnection)({
         type: "postgres",
@@ -27,6 +28,7 @@ const main = async () => {
         password: "postgres",
         logging: true,
         synchronize: true,
+        migrations: [path_1.default.join(__dirname, "./migrations/*")],
         entities: [Post_1.Post, User_1.User]
     });
     const app = (0, express_1.default)();
