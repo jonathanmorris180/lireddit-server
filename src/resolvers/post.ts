@@ -3,16 +3,20 @@ import {
     Arg,
     Ctx,
     Field,
+    FieldResolver,
     InputType,
     Int,
     Mutation,
+    ObjectType,
     Query,
     Resolver,
+    Root,
     UseMiddleware
 } from "type-graphql";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
 import { getConnection } from "typeorm";
+import { Updoot } from "../entities/Updoot";
 
 @InputType()
 class PostInput {
@@ -21,28 +25,115 @@ class PostInput {
     @Field()
     text: string;
 }
-//
-@Resolver()
+
+@ObjectType()
+class PaginatedPosts {
+    @Field(() => [Post])
+    posts: Post[];
+    @Field()
+    hasMore: boolean;
+}
+
+@Resolver(Post)
 export class PostResolver {
-    @Query(() => [Post])
+    @FieldResolver(() => String)
+    textSnippet(@Root() root: Post) {
+        return root.text.slice(0, 50);
+    }
+
+    @Mutation(() => Boolean)
+    @UseMiddleware(isAuth)
+    async vote(
+        @Arg("postId", () => Int) postId: number,
+        @Arg("value", () => Int) value: number,
+        @Ctx() { req }: MyContext
+    ) {
+        const isUpdoot = value !== -1;
+        const realValue = isUpdoot ? 1 : -1;
+        const { userId } = req.session;
+        const updoot = await Updoot.findOne({ where: { postId, userId } });
+
+        if (updoot && updoot.value !== realValue) {
+            await getConnection().transaction(async tm => {
+                await tm.query(
+                    `
+                    UPDATE updoot
+                    SET value = $1
+                    WHERE "postId" = $2 and "userId" = $3
+                    `,
+                    [realValue, postId, userId]
+                );
+
+                await tm.query(
+                    `
+                    UPDATE post
+                    SET points = points + $1
+                    WHERE id = $2
+                    `,
+                    [realValue * 2, postId]
+                );
+            });
+        } else if (!updoot) {
+            await getConnection().transaction(async tm => {
+                await tm.query(
+                    `
+                    INSERT INTO updoot ("userId", "postId", value)
+                    VALUES ($1, $2, $3);
+                    `,
+                    [userId, postId, realValue]
+                );
+
+                await tm.query(
+                    `
+                    UPDATE post
+                    SET points = points + $1
+                    WHERE id = $2;
+                    `,
+                    [realValue, postId]
+                );
+            });
+        }
+        return true;
+    }
+
+    @Query(() => PaginatedPosts)
     async posts(
         @Arg("limit", () => Int) limit: number,
         @Arg("cursor", () => String, { nullable: true }) cursor: string | null
-    ): Promise<Post[]> {
+    ): Promise<PaginatedPosts> {
+        // get one more than asked for to check if there are more in the DB
         const realLimit = Math.min(50, limit);
-        const qb = getConnection()
-            .getRepository(Post)
-            .createQueryBuilder("p")
-            .orderBy('"createdAt"', "DESC")
-            .take(realLimit);
-
+        const realLimitPlusOne = realLimit + 1;
+        const replacements: unknown[] = [realLimitPlusOne];
         if (cursor) {
-            qb.where('"createdAt" < :cursor', {
-                cursor: new Date(parseInt(cursor))
-            });
+            replacements.push(new Date(parseInt(cursor)));
         }
+        // the dollar sign below is replaced by the array (second param to the query function)
+        const posts = await getConnection().query(
+            `
+            SELECT p.*,
+            json_build_object(
+                'id', u.id,
+                'username', u.username,
+                'email', u.email,
+                'createdAt', u."createdAt",
+                'updatedAt', u."updatedAt"
+            ) creator
+            FROM post p
+            INNER JOIN public.user u ON u.id = p."creatorId"
+            ${cursor ? `WHERE p."createdAt" < $2` : ""}
+            ORDER BY p."createdAt" DESC
+            LIMIT $1
+        `,
+            replacements
+        );
 
-        return qb.getMany();
+        console.log("posts: ", posts);
+
+        return {
+            posts: posts.slice(0, realLimit),
+            hasMore: posts.length === realLimitPlusOne
+        };
     }
 
     @Query(() => Post, { nullable: true })
