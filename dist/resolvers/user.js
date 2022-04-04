@@ -97,6 +97,7 @@ let UserResolver = class UserResolver {
             password: await argon2_1.default.hash(newPassword)
         });
         await redis.del(key);
+        console.log("setting user id in changePassword");
         req.session.userId = user.id;
         return { user };
     }
@@ -150,6 +151,7 @@ let UserResolver = class UserResolver {
             }
             console.log("error inserting user: ", error);
         }
+        console.log("setting user id in register");
         req.session.userId = user.id;
         return { user };
     }
@@ -181,6 +183,7 @@ let UserResolver = class UserResolver {
                 ]
             };
         }
+        console.log("setting user id in login");
         req.session.userId = user.id;
         console.log("session: " + JSON.stringify(req.session));
         return { user };

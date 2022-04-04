@@ -53,6 +53,7 @@ let PostResolver = class PostResolver {
         const realValue = isUpdoot ? 1 : -1;
         const { userId } = req.session;
         const updoot = await Updoot_1.Updoot.findOne({ where: { postId, userId } });
+        console.log("from vote: " + req.session.userId);
         if (updoot && updoot.value !== realValue) {
             await (0, typeorm_1.getConnection)().transaction(async (tm) => {
                 await tm.query(`
@@ -82,10 +83,15 @@ let PostResolver = class PostResolver {
         }
         return true;
     }
-    async posts(limit, cursor) {
+    async posts(limit, cursor, { req }) {
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
         const replacements = [realLimitPlusOne];
+        console.log("req.session: " + JSON.stringify(req.session));
+        console.log("req.session.userId: " + req.session.userId);
+        if (req.session.userId) {
+            replacements.push(req.session.userId);
+        }
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
         }
@@ -97,14 +103,16 @@ let PostResolver = class PostResolver {
                 'email', u.email,
                 'createdAt', u."createdAt",
                 'updatedAt', u."updatedAt"
-            ) creator
+            ) creator,
+            ${req.session.userId
+            ? '(SELECT value FROM updoot WHERE "userId" = $2 AND "postId" = p.id) "voteStatus"'
+            : 'null AS "voteStatus"'}
             FROM post p
             INNER JOIN public.user u ON u.id = p."creatorId"
-            ${cursor ? `WHERE p."createdAt" < $2` : ""}
+            ${cursor ? `WHERE p."createdAt" < $${replacements.length}` : ""}
             ORDER BY p."createdAt" DESC
             LIMIT $1
         `, replacements);
-        console.log("posts: ", posts);
         return {
             posts: posts.slice(0, realLimit),
             hasMore: posts.length === realLimitPlusOne
@@ -152,8 +160,9 @@ __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)("limit", () => type_graphql_1.Int)),
     __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
+    __param(2, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "posts", null);
 __decorate([

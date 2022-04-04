@@ -19,7 +19,7 @@ async function sendEmail(to, html) {
     });
     let info = await transporter.sendMail({
         from: '"Fred Foo 👻" <foo@example.com>',
-        to: "bob@bob.com",
+        to: to,
         subject: "Change password",
         text: "This is a test",
         html

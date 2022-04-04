@@ -19,7 +19,7 @@ import path from "path";
 import { Updoot } from "./entities/Updoot";
 
 const main = async () => {
-    const conn = await createConnection({
+    /* const conn =  */ await createConnection({
         type: "postgres",
         database: "lireddit2",
         username: "postgres",

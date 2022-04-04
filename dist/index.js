@@ -22,7 +22,7 @@ const Post_1 = require("./entities/Post");
 const path_1 = __importDefault(require("path"));
 const Updoot_1 = require("./entities/Updoot");
 const main = async () => {
-    const conn = await (0, typeorm_1.createConnection)({
+    await (0, typeorm_1.createConnection)({
         type: "postgres",
         database: "lireddit2",
         username: "postgres",

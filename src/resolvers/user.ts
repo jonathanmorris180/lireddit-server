@@ -101,6 +101,8 @@ export class UserResolver {
 
         await redis.del(key);
 
+        console.log("setting user id in changePassword");
+
         req.session.userId = user.id;
 
         return { user };
@@ -137,6 +139,7 @@ export class UserResolver {
         if (!req.session.userId) {
             return null;
         }
+
         return User.findOne(req.session.userId);
     }
 
@@ -180,6 +183,7 @@ export class UserResolver {
             console.log("error inserting user: ", error);
         }
 
+        console.log("setting user id in register");
         req.session.userId = user.id;
 
         return { user };
@@ -223,6 +227,7 @@ export class UserResolver {
             };
         }
 
+        console.log("setting user id in login");
         req.session.userId = user.id;
         console.log("session: " + JSON.stringify(req.session));
 
