@@ -111,11 +111,13 @@ let UserResolver = class UserResolver {
         await (0, sendEmail_1.sendEmail)(email, `<a href="http://localhost:3000/change-password/${token}">reset password</a>`);
         return true;
     }
-    me({ req }) {
+    async me({ req }) {
         if (!req.session.userId) {
             return null;
         }
-        return User_1.User.findOne(req.session.userId);
+        const result = await User_1.User.findOne(req.session.userId);
+        console.log("user result ", JSON.stringify(result));
+        return result;
     }
     async register(options, { req }) {
         const errors = (0, validateRegister_1.validateRegister)(options);
@@ -230,7 +232,7 @@ __decorate([
     __param(0, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "me", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse),

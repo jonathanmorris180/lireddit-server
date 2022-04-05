@@ -17,7 +17,6 @@ import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
 import { getConnection } from "typeorm";
 import { Updoot } from "../entities/Updoot";
-import { User } from "../entities/User";
 
 @InputType()
 class PostInput {
@@ -43,12 +42,21 @@ export class PostResolver {
     }
 
     // this adds a creator param to each query
-    @FieldResolver(() => User)
-    creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
-        // this will batch all the IDs to a single function call
-        // the batched function call is handled by createUserLoader
-        return userLoader.load(post.creatorId);
-    }
+    /* @FieldResolver(() => User)
+    creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) { */
+    // this will batch all the IDs to a single function call
+    // the batched function call is handled by createUserLoader
+    /* console.log("creator: " + JSON.stringify(post.creator));
+        console.log("creatorId: " + JSON.stringify(post.creatorId));
+        console.log("userLoader: " + JSON.stringify(userLoader));
+        const result = userLoader.load(post.creatorId);
+        console.log("result from creator: " + JSON.stringify(result));
+
+        return result; */
+    // return User.findOne(post.creatorId);
+
+    //return await userLoader.load(post.creatorId);
+    //}
 
     @Mutation(() => Boolean)
     @UseMiddleware(isAuth)
@@ -128,12 +136,20 @@ export class PostResolver {
         const posts = await getConnection().query(
             `
             SELECT p.*,
+            json_build_object(
+                'id', u.id,
+                'username', u.username,
+                'email', u.email,
+                'createdAt', u."createdAt",
+                'updatedAt', u."updatedAt"
+            ) creator,
             ${
                 req.session.userId
                     ? '(SELECT value FROM updoot WHERE "userId" = $2 AND "postId" = p.id) "voteStatus"'
                     : 'null AS "voteStatus"'
             }
             FROM post p
+            INNER JOIN public.user u on u.id = p."creatorId"
             ${cursor ? `WHERE p."createdAt" < $${replacements.length}` : ""}
             ORDER BY p."createdAt" DESC
             LIMIT $1
@@ -141,6 +157,7 @@ export class PostResolver {
             replacements
         );
 
+        console.log("posts from post resolver: " + posts.length);
         return {
             posts: posts.slice(0, realLimit),
             hasMore: posts.length === realLimitPlusOne
@@ -148,8 +165,9 @@ export class PostResolver {
     }
 
     @Query(() => Post, { nullable: true })
-    post(@Arg("id", () => Int) id: number): Promise<Post | undefined> {
-        return Post.findOne(id);
+    async post(@Arg("id", () => Int) id: number): Promise<Post | undefined> {
+        const postResult = await Post.findOne(id, { relations: ["creator"] });
+        return postResult;
     }
 
     @Mutation(() => Post)

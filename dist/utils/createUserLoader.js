@@ -14,7 +14,9 @@ const createUserLoader = () => new dataloader_1.default(async (userIds) => {
     });
     console.log("userIds", userIds);
     console.log("userIdToUser", userIdToUser);
-    return userIds.map(userId => userIdToUser[userId]);
+    const returnValue = userIds.map(userId => userIdToUser[userId]);
+    console.log("returnValue: " + JSON.stringify(returnValue));
+    return returnValue;
 });
 exports.createUserLoader = createUserLoader;
 //# sourceMappingURL=createUserLoader.js.map

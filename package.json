@@ -30,14 +30,13 @@
     "argon2": "^0.28.2",
     "connect-redis": "^6.0.0",
     "cors": "^2.8.5",
-    "dataloader": "^2.0.0",
     "express": "^4.17.1",
     "express-session": "^1.17.2",
     "ioredis": "^4.28.5",
     "nodemailer": "^6.7.2",
     "pg": "^8.7.1",
     "type-graphql": "^1.1.1",
-    "typeorm": "^0.2.41",
+    "typeorm": "^0.2.45",
     "uuid": "^8.3.2"
   },
   "mikro-orm": {

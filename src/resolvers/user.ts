@@ -135,12 +135,15 @@ export class UserResolver {
     }
 
     @Query(() => User, { nullable: true })
-    me(@Ctx() { req }: MyContext) {
+    async me(@Ctx() { req }: MyContext) {
         if (!req.session.userId) {
             return null;
         }
 
-        return User.findOne(req.session.userId);
+        const result = await User.findOne(req.session.userId);
+        console.log("user result ", JSON.stringify(result));
+
+        return result;
     }
 
     @Mutation(() => UserResponse)
