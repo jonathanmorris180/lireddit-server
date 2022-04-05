@@ -11,6 +11,6 @@ declare module "express-session" {
 export type MyContext = {
     req: Request;
     redis: Redis;
-    res: Response /* 
-    userLoader: ReturnType<typeof createUserLoader>; */;
+    res: Response;
+    userLoader: ReturnType<typeof createUserLoader>;
 };

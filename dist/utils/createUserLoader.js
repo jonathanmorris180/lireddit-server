@@ -12,11 +12,7 @@ const createUserLoader = () => new dataloader_1.default(async (userIds) => {
     users.forEach(u => {
         userIdToUser[u.id] = u;
     });
-    console.log("userIds", userIds);
-    console.log("userIdToUser", userIdToUser);
-    const returnValue = userIds.map(userId => userIdToUser[userId]);
-    console.log("returnValue: " + JSON.stringify(returnValue));
-    return returnValue;
+    return userIds.map(userId => userIdToUser[userId]);
 });
 exports.createUserLoader = createUserLoader;
 //# sourceMappingURL=createUserLoader.js.map

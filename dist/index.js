@@ -21,13 +21,14 @@ const User_1 = require("./entities/User");
 const Post_1 = require("./entities/Post");
 const path_1 = __importDefault(require("path"));
 const Updoot_1 = require("./entities/Updoot");
+const createUserLoader_1 = require("./utils/createUserLoader");
 const main = async () => {
     await (0, typeorm_1.createConnection)({
         type: "postgres",
         database: "lireddit2",
         username: "postgres",
         password: "postgres",
-        logging: false,
+        logging: true,
         synchronize: true,
         migrations: [path_1.default.join(__dirname, "./migrations/*")],
         entities: [Post_1.Post, User_1.User, Updoot_1.Updoot]
@@ -67,7 +68,8 @@ const main = async () => {
         context: ({ req, res }) => ({
             req,
             res,
-            redis
+            redis,
+            userLoader: (0, createUserLoader_1.createUserLoader)()
         })
     });
     await apolloServer.start();

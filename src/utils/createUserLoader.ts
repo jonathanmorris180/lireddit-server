@@ -9,10 +9,6 @@ export const createUserLoader = () =>
             userIdToUser[u.id] = u;
         });
 
-        console.log("userIds", userIds);
-        console.log("userIdToUser", userIdToUser);
         // create an array from the userIdToUser object in the same order as the userIds came in
-        const returnValue = userIds.map(userId => userIdToUser[userId]);
-        console.log("returnValue: " + JSON.stringify(returnValue));
-        return returnValue;
+        return userIds.map(userId => userIdToUser[userId]);
     });

@@ -17,6 +17,7 @@ import { User } from "./entities/User";
 import { Post } from "./entities/Post";
 import path from "path";
 import { Updoot } from "./entities/Updoot";
+import { createUserLoader } from "./utils/createUserLoader";
 
 const main = async () => {
     /* const conn =  */ await createConnection({
@@ -24,7 +25,7 @@ const main = async () => {
         database: "lireddit2",
         username: "postgres",
         password: "postgres",
-        logging: false,
+        logging: true,
         synchronize: true,
         migrations: [path.join(__dirname, "./migrations/*")],
         entities: [Post, User, Updoot]
@@ -77,8 +78,8 @@ const main = async () => {
         context: ({ req, res }): MyContext => ({
             req,
             res,
-            redis /* ,
-            userLoader: createUserLoader() */
+            redis,
+            userLoader: createUserLoader()
         })
     });
 
