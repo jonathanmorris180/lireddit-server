@@ -22,6 +22,7 @@ const Post_1 = require("./entities/Post");
 const path_1 = __importDefault(require("path"));
 const Updoot_1 = require("./entities/Updoot");
 const createUserLoader_1 = require("./utils/createUserLoader");
+const createUpdootLoader_1 = require("./utils/createUpdootLoader");
 const main = async () => {
     await (0, typeorm_1.createConnection)({
         type: "postgres",
@@ -69,7 +70,8 @@ const main = async () => {
             req,
             res,
             redis,
-            userLoader: (0, createUserLoader_1.createUserLoader)()
+            userLoader: (0, createUserLoader_1.createUserLoader)(),
+            updootLoader: (0, createUpdootLoader_1.createUpdootLoader)()
         })
     });
     await apolloServer.start();

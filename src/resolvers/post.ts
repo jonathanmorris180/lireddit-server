@@ -45,6 +45,7 @@ export class PostResolver {
 
     // this adds a creator param to each query on the Post object
     // we add the return type in the FieldResolver decorator
+    // @FieldResolver functions only get returned if they are included in the query (e.g., creator in this case)
     @FieldResolver(() => User)
     creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
         /* this will batch all the IDs to a single function call
@@ -52,6 +53,20 @@ export class PostResolver {
 
         // this is added to the return value of
         return userLoader.load(post.creatorId);
+    }
+
+    @FieldResolver(() => Int, { nullable: true })
+    async voteStatus(
+        @Root() post: Post,
+        @Ctx() { updootLoader, req }: MyContext
+    ) {
+        if (!req.session.userId) return null;
+        const updoot = await updootLoader.load({
+            postId: post.id,
+            userId: req.session.userId
+        });
+
+        return updoot ? updoot.value : null;
     }
 
     @Mutation(() => Boolean)
@@ -65,8 +80,6 @@ export class PostResolver {
         const realValue = isUpdoot ? 1 : -1;
         const { userId } = req.session;
         const updoot = await Updoot.findOne({ where: { postId, userId } });
-
-        console.log("from vote: " + req.session.userId);
 
         if (updoot && updoot.value !== realValue) {
             await getConnection().transaction(async tm => {
@@ -114,29 +127,20 @@ export class PostResolver {
     @Query(() => PaginatedPosts)
     async posts(
         @Arg("limit", () => Int) limit: number,
-        @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-        @Ctx() { req }: MyContext
+        @Arg("cursor", () => String, { nullable: true }) cursor: string | null
     ): Promise<PaginatedPosts> {
         // get one more than asked for to check if there are more in the DB
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
         const replacements: unknown[] = [realLimitPlusOne];
 
-        if (req.session.userId) {
-            replacements.push(req.session.userId);
-        }
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
         }
         // the dollar sign below is replaced by the array (second param to the query function)
         const posts = await getConnection().query(
             `
-            SELECT p.*,
-            ${
-                req.session.userId
-                    ? '(SELECT value FROM updoot WHERE "userId" = $2 AND "postId" = p.id) "voteStatus"'
-                    : 'null AS "voteStatus"'
-            }
+            SELECT p.*
             FROM post p
             ${cursor ? `WHERE p."createdAt" < $${replacements.length}` : ""}
             ORDER BY p."createdAt" DESC
