@@ -97,7 +97,6 @@ let UserResolver = class UserResolver {
             password: await argon2_1.default.hash(newPassword)
         });
         await redis.del(key);
-        console.log("setting user id in changePassword");
         req.session.userId = user.id;
         return { user };
     }
@@ -112,11 +111,11 @@ let UserResolver = class UserResolver {
         return true;
     }
     async me({ req }) {
+        console.log("user ID: " + req.session.userId);
         if (!req.session.userId) {
             return null;
         }
         const result = await User_1.User.findOne(req.session.userId);
-        console.log("user result ", JSON.stringify(result));
         return result;
     }
     async register(options, { req }) {
@@ -140,7 +139,7 @@ let UserResolver = class UserResolver {
             user = result.raw[0];
         }
         catch (error) {
-            console.log("err: ", error);
+            console.error("error: ", error);
             if (error.code === "23505") {
                 return {
                     errors: [
@@ -153,7 +152,6 @@ let UserResolver = class UserResolver {
             }
             console.log("error inserting user: ", error);
         }
-        console.log("setting user id in register");
         req.session.userId = user.id;
         return { user };
     }
@@ -171,10 +169,7 @@ let UserResolver = class UserResolver {
                 ]
             };
         }
-        console.log("user.password: " + JSON.stringify(user));
-        console.log("options.password: " + password);
         const valid = await argon2_1.default.verify(user.password, password);
-        console.log("valid: " + valid);
         if (!valid) {
             return {
                 errors: [
@@ -185,16 +180,14 @@ let UserResolver = class UserResolver {
                 ]
             };
         }
-        console.log("setting user id in login");
         req.session.userId = user.id;
-        console.log("session: " + JSON.stringify(req.session));
         return { user };
     }
     logout({ req, res }) {
         return new Promise(resolve => req.session.destroy(err => {
             res.clearCookie(constants_1.COOKIE_NAME);
             if (err) {
-                console.log(err);
+                console.error(err);
                 resolve(false);
                 return;
             }

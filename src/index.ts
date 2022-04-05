@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import "dotenv-safe/config";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
@@ -21,27 +22,24 @@ import { createUserLoader } from "./utils/createUserLoader";
 import { createUpdootLoader } from "./utils/createUpdootLoader";
 
 const main = async () => {
-    /* const conn =  */ await createConnection({
+    const conn = await createConnection({
         type: "postgres",
-        database: "lireddit2",
-        username: "postgres",
-        password: "postgres",
+        url: process.env.DATABASE_URL,
         logging: true,
-        synchronize: true,
         migrations: [path.join(__dirname, "./migrations/*")],
         entities: [Post, User, Updoot]
     });
-    // await conn.runMigrations()
+    await conn.runMigrations();
     const app = express();
 
-    // await Post.delete({})
-
     const RedisStore = connectRedis(session);
-    const redis = new Redis();
+    const redis = new Redis(process.env.REDIS_URL);
 
+    // nginx sits in front of the API, so we need to set this
+    app.set("trust proxy", 1);
     app.use(
         cors({
-            origin: "http://localhost:3000",
+            origin: process.env.CORS_ORIGIN,
             credentials: true
         })
     );
@@ -52,13 +50,14 @@ const main = async () => {
             name: COOKIE_NAME,
             store: new RedisStore({ client: redis, disableTouch: true }),
             // secret should be set as an environment variable - the secret is needed to decrypt the cookie on the server to send to Redis
-            secret: "test",
+            secret: process.env.EXPRESS_SESSION_SECRET,
             resave: false,
             cookie: {
                 maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
                 httpOnly: true,
                 sameSite: "lax", // CSRF
-                secure: __prod__ // cookie only works in https
+                secure: __prod__, // cookie only works in https,
+                domain: __prod__ ? ".forcecode.io" : undefined
             },
             saveUninitialized: false
         })
@@ -92,8 +91,8 @@ const main = async () => {
         cors: false
     });
 
-    app.listen(4000, () => {
-        console.log("server started on localhost:4000");
+    app.listen(parseInt(process.env.PORT), () => {
+        console.log("server started successfully");
     });
 };
 

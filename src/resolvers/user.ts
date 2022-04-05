@@ -101,8 +101,6 @@ export class UserResolver {
 
         await redis.del(key);
 
-        console.log("setting user id in changePassword");
-
         req.session.userId = user.id;
 
         return { user };
@@ -136,12 +134,13 @@ export class UserResolver {
 
     @Query(() => User, { nullable: true })
     async me(@Ctx() { req }: MyContext) {
+        console.log("user ID: " + req.session.userId);
+
         if (!req.session.userId) {
             return null;
         }
 
         const result = await User.findOne(req.session.userId);
-        console.log("user result ", JSON.stringify(result));
 
         return result;
     }
@@ -171,7 +170,7 @@ export class UserResolver {
                 .execute();
             user = result.raw[0];
         } catch (error) {
-            console.log("err: ", error);
+            console.error("error: ", error);
 
             if (error.code === "23505") {
                 return {
@@ -185,8 +184,6 @@ export class UserResolver {
             }
             console.log("error inserting user: ", error);
         }
-
-        console.log("setting user id in register");
         req.session.userId = user.id;
 
         return { user };
@@ -213,11 +210,8 @@ export class UserResolver {
                 ]
             };
         }
-        console.log("user.password: " + JSON.stringify(user));
-        console.log("options.password: " + password);
 
         const valid = await argon2.verify(user.password, password);
-        console.log("valid: " + valid);
 
         if (!valid) {
             return {
@@ -230,9 +224,7 @@ export class UserResolver {
             };
         }
 
-        console.log("setting user id in login");
         req.session.userId = user.id;
-        console.log("session: " + JSON.stringify(req.session));
 
         return { user };
     }
@@ -243,7 +235,7 @@ export class UserResolver {
             req.session.destroy(err => {
                 res.clearCookie(COOKIE_NAME);
                 if (err) {
-                    console.log(err);
+                    console.error(err);
                     resolve(false);
                     return;
                 }

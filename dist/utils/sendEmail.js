@@ -6,8 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendEmail = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 async function sendEmail(to, html) {
-    let testAccount = await nodemailer_1.default.createTestAccount();
-    console.log("testAccount", testAccount);
+    await nodemailer_1.default.createTestAccount();
     let transporter = nodemailer_1.default.createTransport({
         host: "smtp.ethereal.email",
         port: 587,

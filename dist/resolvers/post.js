@@ -116,7 +116,6 @@ let PostResolver = class PostResolver {
     }
     async post(id) {
         const postResult = await Post_1.Post.findOne(id);
-        console.log("postResult: ", JSON.stringify(postResult));
         return postResult;
     }
     async createPost(input, { req }) {

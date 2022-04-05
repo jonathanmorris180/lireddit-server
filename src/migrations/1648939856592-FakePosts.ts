@@ -1,8 +1,8 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class FakePosts1648939856592 implements MigrationInterface {
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        queryRunner.query(`
+    public async up(_: QueryRunner): Promise<void> {
+        /* queryRunner.query(`
         insert into post (title, text, "creatorId", "createdAt") values ('Rugrats Go Wild!', 'Aenean lectus. Pellentesque eget nunc. Donec quis orci eget orci vehicula condimentum.
 
 Curabitur in libero ut massa volutpat convallis. Morbi odio odio, elementum eu, interdum eu, tincidunt in, leo. Maecenas pulvinar lobortis est.', 1, '2021-09-20T11:06:15Z');
@@ -329,7 +329,7 @@ Praesent id massa id nisl venenatis lacinia. Aenean sit amet justo. Morbi ut odi
 
 Cras mi pede, malesuada in, imperdiet et, commodo vulputate, justo. In blandit ultrices enim. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.', 1, '2021-06-15T04:45:45Z');
 insert into post (title, text, "creatorId", "createdAt") values ('Where a Good Man Goes (Joi gin a long)', 'Nullam porttitor lacus at turpis. Donec posuere metus vitae ipsum. Aliquam non mauris.', 1, '2021-11-04T20:47:09Z');
-        `);
+        `); */
     }
 
     public async down(_: QueryRunner): Promise<void> {}

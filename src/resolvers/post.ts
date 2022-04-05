@@ -158,7 +158,6 @@ export class PostResolver {
     @Query(() => Post, { nullable: true })
     async post(@Arg("id", () => Int) id: number): Promise<Post | undefined> {
         const postResult = await Post.findOne(id);
-        console.log("postResult: ", JSON.stringify(postResult));
 
         return postResult;
     }
