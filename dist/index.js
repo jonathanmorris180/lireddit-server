@@ -24,6 +24,11 @@ const path_1 = __importDefault(require("path"));
 const Updoot_1 = require("./entities/Updoot");
 const createUserLoader_1 = require("./utils/createUserLoader");
 const createUpdootLoader_1 = require("./utils/createUpdootLoader");
+const typeorm_2 = require("@adminjs/typeorm");
+const adminjs_1 = __importDefault(require("adminjs"));
+const express_2 = __importDefault(require("@adminjs/express"));
+const argon2_1 = __importDefault(require("argon2"));
+adminjs_1.default.registerAdapter({ Database: typeorm_2.Database, Resource: typeorm_2.Resource });
 const main = async () => {
     const conn = await (0, typeorm_1.createConnection)({
         type: "postgres",
@@ -32,15 +37,32 @@ const main = async () => {
         migrations: [path_1.default.join(__dirname, "./migrations/*")],
         entities: [Post_1.Post, User_1.User, Updoot_1.Updoot]
     });
-    await conn.runMigrations();
+    const adminJs = new adminjs_1.default({
+        databases: [conn],
+        rootPath: "/admin"
+    });
     const app = (0, express_1.default)();
     const RedisStore = (0, connect_redis_1.default)(express_session_1.default);
     const redis = new ioredis_1.default(process.env.REDIS_URL);
+    const adminJsRouter = express_2.default.buildAuthenticatedRouter(adminJs, {
+        authenticate: async (email, password) => {
+            const user = await User_1.User.findOne({ email });
+            if (user) {
+                const matched = await argon2_1.default.verify(user.password, password);
+                if (matched) {
+                    return user;
+                }
+            }
+            return false;
+        },
+        cookiePassword: process.env.EXPRESS_SESSION_SECRET
+    });
     app.set("trust proxy", 1);
     app.use((0, cors_1.default)({
         origin: process.env.CORS_ORIGIN,
         credentials: true
     }));
+    app.use(adminJs.options.rootPath, adminJsRouter);
     app.use((0, express_session_1.default)({
         name: constants_1.COOKIE_NAME,
         store: new RedisStore({ client: redis, disableTouch: true }),

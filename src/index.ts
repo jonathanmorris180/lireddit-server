@@ -20,6 +20,12 @@ import path from "path";
 import { Updoot } from "./entities/Updoot";
 import { createUserLoader } from "./utils/createUserLoader";
 import { createUpdootLoader } from "./utils/createUpdootLoader";
+import { Database, Resource } from "@adminjs/typeorm";
+import AdminJS from "adminjs";
+import AdminJSExpress from "@adminjs/express";
+import argon2 from "argon2";
+
+AdminJS.registerAdapter({ Database, Resource });
 
 const main = async () => {
     const conn = await createConnection({
@@ -29,11 +35,31 @@ const main = async () => {
         migrations: [path.join(__dirname, "./migrations/*")],
         entities: [Post, User, Updoot]
     });
-    await conn.runMigrations();
+    // await conn.runMigrations();
+
+    const adminJs = new AdminJS({
+        databases: [conn],
+        rootPath: "/admin"
+    });
+
     const app = express();
 
     const RedisStore = connectRedis(session);
     const redis = new Redis(process.env.REDIS_URL);
+
+    const adminJsRouter = AdminJSExpress.buildAuthenticatedRouter(adminJs, {
+        authenticate: async (email, password) => {
+            const user = await User.findOne({ email });
+            if (user) {
+                const matched = await argon2.verify(user.password, password);
+                if (matched) {
+                    return user;
+                }
+            }
+            return false;
+        },
+        cookiePassword: process.env.EXPRESS_SESSION_SECRET
+    });
 
     // nginx sits in front of the API, so we need to set this
     app.set("trust proxy", 1);
@@ -43,6 +69,8 @@ const main = async () => {
             credentials: true
         })
     );
+
+    app.use(adminJs.options.rootPath, adminJsRouter);
 
     // express-session needs to be before the apollo middleware because it will be used inside the apollo middleware
     app.use(
